@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Nav, NavLink } from "@/components/ui/Nav";
+import { Footer } from "@/components/ui/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,9 +23,7 @@ export default function RootLayout({
             <NavLink href="/">Home</NavLink>
           </Nav>
           {children}
-          <footer>
-            This is the footer!
-          </footer>
+          <Footer></Footer>
         </main>
       </body>
     </html>
