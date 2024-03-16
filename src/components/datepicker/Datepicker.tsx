@@ -2,7 +2,8 @@
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import useOnClickOutside from "@/hooks";
 
 enum datepickerOptionsEnum {
   today,
@@ -23,7 +24,7 @@ const datepickerOptions = [
 export const Datepicker = () => {
   const [selectedDate, setSelectedDate] = useState<{ startDate: Date | null; endDate: Date | null }>({ startDate: null, endDate: null });
   const [isOpen, setIsOpen] = useState(false);
-  const datePickerRef = useRef<HTMLDivElement | null>(null);
+  const datePickerContainerRef = useRef<HTMLDivElement | null>(null);
 
   const onDateChange = (dates: [start: Date, end: Date]) => {
     const [start, end] = dates;
@@ -63,22 +64,12 @@ export const Datepicker = () => {
 
   const toggleDatePicker = () => setIsOpen(!isOpen);
 
-  const handleClickOutside = (event: React.MouseEvent<HTMLDivElement | Document> | MouseEvent) => {
-    if (isOpen && datePickerRef.current) {
-      const clickedTarget = event.target as Node;
-      if (!datePickerRef.current.contains(clickedTarget)) {
-        setIsOpen(false);
-      }
+  useOnClickOutside(datePickerContainerRef, () => {
+    const container = datePickerContainerRef.current;
+    if (isOpen && container) {
+      setIsOpen(false);
     }
-  };
-
-  useEffect(() => {
-    document.addEventListener("click", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, [isOpen]);
+  });
 
   return (
     <section className="absolute z-50">
@@ -86,7 +77,7 @@ export const Datepicker = () => {
         {selectedDate.startDate && selectedDate.endDate ? `${selectedDate.startDate?.toLocaleDateString()} - ${selectedDate.endDate?.toLocaleDateString()}` : "Select Date"}
       </button>
       {isOpen && (
-        <div className="flex border gap-x-2" ref={datePickerRef}>
+        <div className="flex border gap-x-2" ref={datePickerContainerRef}>
           <div className="flex flex-col justify-between p-2">
             <ul className="space-y-2">
               {datepickerOptions.map((option) => (
