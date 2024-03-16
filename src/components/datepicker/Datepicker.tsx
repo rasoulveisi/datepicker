@@ -4,48 +4,51 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useEffect, useRef, useState } from "react";
 
-type datepickerQuickActions = "today" | "last3Days" | "thisWeek" | "thisMonth" | "thisYear";
+enum datepickerOptionsEnum {
+  today,
+  last3Days,
+  thisWeek,
+  thisMonth,
+  thisYear,
+}
+const threeDaySecond = 3 * 24 * 60 * 60 * 1000;
+const datepickerOptions = [
+  { title: "Today", id: datepickerOptionsEnum.today },
+  { title: "Last 3 Days", id: datepickerOptionsEnum.last3Days },
+  { title: "This Week", id: datepickerOptionsEnum.thisWeek },
+  { title: "This Month", id: datepickerOptionsEnum.thisMonth },
+  { title: "This Year", id: datepickerOptionsEnum.thisYear },
+];
 
-export function Datepicker() {
-  const [date, setDate] = useState<{ startDate: Date | null; endDate: Date | null }>({ startDate: null, endDate: null });
+export const Datepicker = () => {
+  const [selectedDate, setSelectedDate] = useState<{ startDate: Date | null; endDate: Date | null }>({ startDate: null, endDate: null });
   const [isOpen, setIsOpen] = useState(false);
   const datePickerRef = useRef<HTMLDivElement | null>(null);
 
   const onDateChange = (dates: [start: Date, end: Date]) => {
     const [start, end] = dates;
-    setDate({ startDate: start, endDate: end });
+    setSelectedDate({ startDate: start, endDate: end });
   };
 
-  const toggleDatePicker = () => setIsOpen(!isOpen);
-
-  const handleClickOutside = (event: React.MouseEvent<HTMLDivElement | Document> | MouseEvent) => {
-    if (isOpen && datePickerRef.current) {
-      const clickedTarget = event.target as Node;
-      if (!datePickerRef.current.contains(clickedTarget)) {
-        setIsOpen(false);
-      }
-    }
-  };
-
-  const handleQuickAction = (action: datepickerQuickActions) => {
+  const handleQuickAction = (action: datepickerOptionsEnum) => {
     const today = new Date();
 
     switch (action) {
-      case "today":
-        setDate({ startDate: today, endDate: today });
+      case datepickerOptionsEnum.today:
+        setSelectedDate({ startDate: today, endDate: today });
         break;
-      case "last3Days":
-        setDate({ startDate: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000), endDate: today });
+      case datepickerOptionsEnum.last3Days:
+        setSelectedDate({ startDate: new Date(today.getTime() - threeDaySecond), endDate: today });
         break;
-      case "thisWeek":
+      case datepickerOptionsEnum.thisWeek:
         const startOfWeek = getStartOfWeek(today);
-        setDate({ startDate: startOfWeek, endDate: today });
+        setSelectedDate({ startDate: startOfWeek, endDate: today });
         break;
-      case "thisMonth":
-        setDate({ startDate: new Date(today.getFullYear(), today.getMonth(), 1), endDate: today });
+      case datepickerOptionsEnum.thisMonth:
+        setSelectedDate({ startDate: new Date(today.getFullYear(), today.getMonth(), 1), endDate: today });
         break;
-      case "thisYear":
-        setDate({ startDate: new Date(today.getFullYear(), 0, 1), endDate: today });
+      case datepickerOptionsEnum.thisYear:
+        setSelectedDate({ startDate: new Date(today.getFullYear(), 0, 1), endDate: today });
         break;
       default:
         break;
@@ -58,7 +61,17 @@ export function Datepicker() {
     return new Date(date.setDate(diff));
   }
 
-  // Add event listeners on component mount and remove on unmount
+  const toggleDatePicker = () => setIsOpen(!isOpen);
+
+  const handleClickOutside = (event: React.MouseEvent<HTMLDivElement | Document> | MouseEvent) => {
+    if (isOpen && datePickerRef.current) {
+      const clickedTarget = event.target as Node;
+      if (!datePickerRef.current.contains(clickedTarget)) {
+        setIsOpen(false);
+      }
+    }
+  };
+
   useEffect(() => {
     document.addEventListener("click", handleClickOutside);
 
@@ -68,43 +81,31 @@ export function Datepicker() {
   }, [isOpen]);
 
   return (
-    <div className="relative space-y-1">
+    <section className="absolute z-50">
       <button className="border px-2 py-1 rounded" onClick={toggleDatePicker}>
-        {date.startDate && date.endDate ? `${date.startDate?.toLocaleDateString()} - ${date.endDate?.toLocaleDateString()}` : "Select Date"}
+        {selectedDate.startDate && selectedDate.endDate ? `${selectedDate.startDate?.toLocaleDateString()} - ${selectedDate.endDate?.toLocaleDateString()}` : "Select Date"}
       </button>
       {isOpen && (
-        <section className="absolute z-50" ref={datePickerRef}>
-          <div className="flex border gap-x-2">
-            <div className="flex flex-col justify-between p-2">
-              <ul className="space-y-2">
-                <li className="hover:bg-slate-50 p-1">
-                  <button onClick={() => handleQuickAction("today")}>Today</button>
+        <div className="flex border gap-x-2" ref={datePickerRef}>
+          <div className="flex flex-col justify-between p-2">
+            <ul className="space-y-2">
+              {datepickerOptions.map((option) => (
+                <li className="hover:bg-slate-50 p-1" key={option.id}>
+                  <button onClick={() => handleQuickAction(option.id)}>{option.title}</button>
                 </li>
-                <li className="hover:bg-slate-50 p-1">
-                  <button onClick={() => handleQuickAction("last3Days")}>Last 3 Days</button>
-                </li>
-                <li className="hover:bg-slate-50 p-1">
-                  <button onClick={() => handleQuickAction("thisWeek")}>This Week</button>
-                </li>
-                <li className="hover:bg-slate-50 p-1">
-                  <button onClick={() => handleQuickAction("thisMonth")}>This Month</button>
-                </li>
-                <li className="hover:bg-slate-50 p-1">
-                  <button onClick={() => handleQuickAction("thisYear")}>This Year</button>
-                </li>
-              </ul>
-              <div className="flex gap-3">
-                <button className="bg-blue-50 rounded-lg px-2 py-1">Apply</button>
-                <button className="bg-blue-50 rounded-lg px-2 py-1">Reset</button>
-              </div>
+              ))}
+            </ul>
+            <div className="flex gap-3">
+              <button className="bg-blue-50 rounded-lg px-2 py-1">Apply</button>
+              <button className="bg-blue-50 rounded-lg px-2 py-1">Reset</button>
             </div>
-            <DatePicker selected={date.startDate} onChange={onDateChange} startDate={date.startDate} endDate={date.endDate} selectsRange inline />
           </div>
-        </section>
+          <DatePicker selected={selectedDate.startDate} onChange={onDateChange} startDate={selectedDate.startDate} endDate={selectedDate.endDate} selectsRange inline />
+        </div>
       )}
-    </div>
+    </section>
   );
-}
+};
 
 // TODO: implement query generator service which generate query params for browser and api request
 // TODO: apply button will send start and end date to the parent component
