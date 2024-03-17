@@ -3,7 +3,7 @@
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useRef, useState } from "react";
-import useOnClickOutside from "@/hooks";
+import { useOnClickOutside, useQueryString } from "@/hooks";
 
 enum datepickerOptionsEnum {
   today,
@@ -23,12 +23,19 @@ const datepickerOptions = [
 
 export const Datepicker = () => {
   const [selectedDate, setSelectedDate] = useState<{ startDate: Date | null; endDate: Date | null }>({ startDate: null, endDate: null });
+  const [queryParams, updateQueryString] = useQueryString();
   const [isOpen, setIsOpen] = useState(false);
   const datePickerContainerRef = useRef<HTMLDivElement | null>(null);
 
   const onDateChange = (dates: [start: Date, end: Date]) => {
     const [start, end] = dates;
     setSelectedDate({ startDate: start, endDate: end });
+  };
+
+  const onApply = () => {
+    const { startDate, endDate } = selectedDate;
+    startDate && endDate && updateQueryString({ from: startDate.toISOString(), to: endDate.toISOString() });
+    console.log("component:" + queryParams);
   };
 
   const handleQuickAction = (action: datepickerOptionsEnum) => {
@@ -87,7 +94,9 @@ export const Datepicker = () => {
               ))}
             </ul>
             <div className="flex gap-3">
-              <button className="bg-blue-50 rounded-lg px-2 py-1">Apply</button>
+              <button className="bg-blue-50 rounded-lg px-2 py-1" onClick={onApply}>
+                Apply
+              </button>
               <button className="bg-blue-50 rounded-lg px-2 py-1">Reset</button>
             </div>
           </div>
@@ -98,6 +107,5 @@ export const Datepicker = () => {
   );
 };
 
-// TODO: implement query generator service which generate query params for browser and api request
 // TODO: apply button will send start and end date to the parent component
 // TODO: reset button will be reset the date to the default start and end date which is received form component input
